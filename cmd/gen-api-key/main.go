@@ -45,6 +45,7 @@ func main() {
 		Hash:    services.Hash(randStr),
 		Env:     *e,
 		AppName: *n,
+		Prefix:  *p,
 	}
 	if *j {
 		output, err := json.Marshal(res)
