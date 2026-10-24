@@ -2,8 +2,9 @@
 package models
 
 type Result struct {
-	APIKey string `json:"api-key"`
-	Hash string `json:"hash"`
-	Env string `json:"env"`
+	APIKey  string `json:"api-key"`
+	Hash    string `json:"hash"`
+	Prefix  string `json:"prefix"`
 	AppName string `json:"app-name"`
+	Env     string `json:"env"`
 }
