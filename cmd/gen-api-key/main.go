@@ -7,18 +7,16 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/arizon-dread/gen-api-key/internal/models"
 	"github.com/arizon-dread/gen-api-key/internal/services"
 )
 
 var (
-	p = flag.String("p", "psk", "prefix")
-	n = flag.String("n", "my-app", "application name. DO NOT use underscore (_) in the value")
-	e = flag.String("e", "prod", "environment")
-	j = flag.Bool("j", false, "output JSON")
-	//h = flag.Bool("h", false, "output help text")
+	p = flag.String("p", "psk", "Prefix. Set to \"\" to clear")
+	n = flag.String("n", "", "Application name")
+	e = flag.String("e", "", "Environment")
+	j = flag.Bool("j", false, "Output JSON")
 )
 
 func main() {
@@ -26,7 +24,7 @@ func main() {
 	flag.Usage = showHelp
 	flag.Parse()
 
-	if !validateFlagValues() {
+	if !services.ValidateFlagValues(*p, *n, *e) {
 		fmt.Printf("underscore (_) is not allowed in prefix, environment or app-name")
 		os.Exit(2)
 	}
@@ -34,8 +32,16 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed creating random hex string, %s", err)
 	}
+
+	prefix := fmt.Sprintf("%s%s%s", services.AddSepIfValue(*p), services.AddSepIfValue(*n), services.AddSepIfValue(*e))
+	apiKey := randStr
+
+	if len(prefix) > 0 {
+		apiKey = fmt.Sprintf("%s%s", prefix, apiKey)
+	}
+
 	res := models.Result{
-		APIKey:  fmt.Sprintf("%s_%s_%s_%s", *p, *n, *e, randStr),
+		APIKey:  apiKey,
 		Hash:    services.Hash(randStr),
 		Env:     *e,
 		AppName: *n,
@@ -50,11 +56,14 @@ func main() {
 		os.Exit(0)
 	}
 	fmt.Printf("APIKey: %s\nHash: %s", res.APIKey, res.Hash)
+	os.Exit(0)
 }
 
 func showHelp() {
-	fmt.Fprintf(flag.CommandLine.Output(), `gen-api-key - a cli app for generating and hashing API keys
+	fmt.Fprintf(flag.CommandLine.Output(), `gen-api-key - A cli app for generating and hashing API keys
 Usage %s [options]
+
+Note: Do not use underscores in the flag values!
 
 options:
 `, os.Args[0])
@@ -62,17 +71,4 @@ options:
 	fmt.Fprintf(flag.CommandLine.Output(), ``)
 
 	os.Exit(1)
-}
-
-func validateFlagValues() bool {
-	if strings.Contains(*p, "_") {
-		return false
-	}
-	if strings.Contains(*n, "_") {
-		return false
-	}
-	if strings.Contains(*e, "_") {
-		return false
-	}
-	return true
 }
