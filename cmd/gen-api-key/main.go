@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/arizon-dread/gen-api-key/internal/models"
 	"github.com/arizon-dread/gen-api-key/internal/services"
@@ -24,10 +25,11 @@ func main() {
 	// Set help output
 	flag.Usage = showHelp
 	flag.Parse()
-	//if *h {
-	//	showHelp()
-	//}
 
+	if !validateFlagValues() {
+		fmt.Printf("underscore (_) is not allowed in prefix, environment or app-name")
+		os.Exit(2)
+	}
 	randStr, err := services.RandomHex()
 	if err != nil {
 		log.Fatalf("failed creating random hex string, %s", err)
@@ -42,7 +44,7 @@ func main() {
 		output, err := json.Marshal(res)
 		if err != nil {
 			log.Printf("unable to marshal go struct into json")
-			os.Exit(2)
+			os.Exit(3)
 		}
 		fmt.Printf("%s", string(output))
 		os.Exit(0)
@@ -60,4 +62,17 @@ options:
 	fmt.Fprintf(flag.CommandLine.Output(), ``)
 
 	os.Exit(1)
+}
+
+func validateFlagValues() bool {
+	if strings.Contains(*p, "_") {
+		return false
+	}
+	if strings.Contains(*n, "_") {
+		return false
+	}
+	if strings.Contains(*e, "_") {
+		return false
+	}
+	return true
 }
